@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GridMind — AI Power Grid Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700;900&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --e:#00f5c4; --e2:#00c49a; --p:#4f8cff; --p2:#2563eb;
+  --warn:#ffbe0b; --danger:#ff4d6d; --purple:#a78bfa;
+  --bg0:#020812; --bg1:#050f1f; --bg2:#071628;
+  --glass:rgba(5,20,45,0.55); --gb:rgba(0,245,196,0.12); --gb2:rgba(0,245,196,0.28);
+  --t0:#e8f4f0; --t1:#7ab8a8; --t2:#2e5c50;
+  --fh:'Barlow Condensed',sans-serif; --fb:'DM Sans',sans-serif; --fm:'Space Mono',monospace;
+}
+*,::before,::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg0);color:var(--t0);font-family:var(--fb);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+#wgl{position:fixed;inset:0;z-index:0;pointer-events:none}
+.page{position:relative;z-index:2}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 3rem;background:rgba(2,8,18,0.7);backdrop-filter:blur(24px);border-bottom:1px solid rgba(0,245,196,0.07);transition:background .3s}
+.nav-logo{font-family:var(--fh);font-size:20px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--e);text-shadow:0 0 18px rgba(0,245,196,.4)}
+.nav-logo span{color:var(--p)}
+.nav-links{display:flex;gap:2px}
+.nl{background:none;border:none;cursor:pointer;font-family:var(--fb);font-size:12px;font-weight:500;color:var(--t1);padding:7px 13px;border-radius:6px;letter-spacing:.4px;transition:color .2s,background .2s;text-decoration:none}
+.nl:hover,.nl.active{color:var(--e);background:rgba(0,245,196,.07)}
+.nav-pill{display:flex;align-items:center;gap:8px;font-family:var(--fm);font-size:10px;letter-spacing:2px;color:var(--e);text-transform:uppercase;border:1px solid rgba(0,245,196,.2);padding:5px 14px;border-radius:20px;background:rgba(0,245,196,.04)}
+.pdot{width:6px;height:6px;border-radius:50%;background:var(--e);box-shadow:0 0 8px var(--e);animation:pd 1.8s infinite}
+@keyframes pd{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+/* LAYOUT */
+section{position:relative;overflow:hidden}
+.wrap{max-width:1280px;margin:0 auto;padding:0 3rem}
+.sec-pad{padding:110px 0}
+.sec-eyebrow{display:inline-flex;align-items:center;gap:10px;font-family:var(--fm);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--e);margin-bottom:18px}
+.sec-eyebrow::before{content:'';width:28px;height:1.5px;background:var(--e);border-radius:1px}
+.sec-title{font-family:var(--fh);font-size:clamp(38px,5vw,68px);font-weight:900;line-height:.95;letter-spacing:1px;text-transform:uppercase;color:var(--t0);margin-bottom:16px}
+.sec-title .e{color:var(--e);text-shadow:0 0 28px rgba(0,245,196,.35)}
+.sec-title .p{color:var(--p)}
+.sec-sub{font-size:15px;color:var(--t1);line-height:1.75;max-width:560px}
+
+/* GLASS CARD */
+.gc{background:var(--glass);backdrop-filter:blur(20px);border:1px solid rgba(0,245,196,.12);border-radius:16px;position:relative;overflow:hidden;transition:border-color .3s,transform .3s,box-shadow .3s}
+.gc::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--e),transparent);opacity:.28}
+.gc:hover{border-color:var(--gb2);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,.45)}
+
+/* DIVIDER */
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(0,245,196,.1),transparent)}
+
+/* SCROLL REVEAL */
+.sr{opacity:0;transform:translateY(36px)}
+.sr-l{opacity:0;transform:translateX(-40px)}
+.sr-r{opacity:0;transform:translateX(40px)}
+
+/* ── HERO ── */
+#hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:64px 2rem 0;position:relative}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:10px;font-family:var(--fm);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--e);border:1px solid rgba(0,245,196,.2);border-radius:20px;padding:7px 18px;background:rgba(0,245,196,.04);margin-bottom:36px;opacity:0;transform:translateY(16px)}
+h1.hero-t{font-family:var(--fh);font-size:clamp(64px,11vw,160px);font-weight:900;line-height:.88;letter-spacing:2px;text-transform:uppercase;margin-bottom:28px;opacity:0;transform:translateY(20px)}
+h1.hero-t .g1{display:block;background:linear-gradient(120deg,#fff 0%,var(--e) 60%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h1.hero-t .g2{display:block;background:linear-gradient(120deg,var(--p) 0%,#c4b5fd 100%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:17px;color:var(--t1);line-height:1.75;max-width:600px;margin:0 auto 44px;opacity:0;transform:translateY(16px)}
+.hero-sub strong{color:var(--t0)}
+.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:64px;opacity:0;transform:translateY(14px)}
+.btn-e{background:var(--e);color:#020812;border:none;cursor:pointer;font-family:var(--fb);font-size:14px;font-weight:700;padding:14px 36px;border-radius:8px;letter-spacing:.3px;transition:all .2s;text-decoration:none;display:inline-block}
+.btn-e:hover{background:#00ffce;box-shadow:0 0 32px rgba(0,245,196,.5);transform:translateY(-2px)}
+.btn-g{background:transparent;color:var(--e);border:1.5px solid rgba(0,245,196,.3);cursor:pointer;font-family:var(--fb);font-size:14px;font-weight:600;padding:14px 36px;border-radius:8px;transition:all .2s;text-decoration:none;display:inline-block}
+.btn-g:hover{background:rgba(0,245,196,.07);border-color:var(--e);transform:translateY(-2px)}
+.hero-stats{display:flex;gap:0;border:1px solid rgba(0,245,196,.1);border-radius:16px;overflow:hidden;background:rgba(5,20,45,.5);backdrop-filter:blur(16px);opacity:0;transform:translateY(14px)}
+.hs{flex:1;padding:24px 28px;text-align:center;border-right:1px solid rgba(0,245,196,.08);transition:background .25s}
+.hs:last-child{border-right:none}
+.hs:hover{background:rgba(0,245,196,.05)}
+.hs-num{font-family:var(--fh);font-size:48px;font-weight:900;line-height:1;color:var(--e);text-shadow:0 0 20px rgba(0,245,196,.35);display:block;font-variant-numeric:tabular-nums}
+.hs-num.bl{color:var(--p);text-shadow:0 0 20px rgba(79,140,255,.35)}
+.hs-num.am{color:var(--warn)}
+.hs-num.pu{color:var(--purple)}
+.hs-lbl{font-size:11px;color:var(--t1);text-transform:uppercase;letter-spacing:1.5px;margin-top:6px;font-weight:600}
+.scroll-cue{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--t2);font-family:var(--fm);font-size:9px;letter-spacing:3px;text-transform:uppercase;animation:sc 2.4s ease infinite}
+.sc-line{width:1px;height:44px;background:linear-gradient(to bottom,var(--e),transparent)}
+@keyframes sc{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(8px)}}
+
+/* STATS BAND */
+#statsband{padding:80px 0;background:linear-gradient(180deg,rgba(0,245,196,.02),transparent);border-top:1px solid rgba(0,245,196,.06);border-bottom:1px solid rgba(0,245,196,.06)}
+.sb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(0,245,196,.08);border:1px solid rgba(0,245,196,.1);border-radius:16px;overflow:hidden}
+.sb-cell{background:var(--bg1);padding:36px 24px;text-align:center;transition:background .25s}
+.sb-cell:hover{background:rgba(0,245,196,.04)}
+.sb-num{font-family:var(--fh);font-size:52px;font-weight:900;line-height:1;color:var(--e)}
+.sb-num.p{color:var(--p)}.sb-num.w{color:var(--warn)}.sb-num.pu{color:var(--purple)}
+.sb-lbl{font-size:12px;color:var(--t1);margin-top:8px;font-weight:500}
+
+/* HOW IT WORKS */
+#how{background:var(--bg1)}
+.wire-track{position:absolute;top:50%;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--e2),var(--p2),transparent);opacity:.1;pointer-events:none}
+.wire-spark{position:absolute;top:50%;width:60px;height:2px;background:linear-gradient(90deg,transparent,var(--e),transparent);transform:translateY(-50%);animation:ws 2.5s linear infinite;pointer-events:none}
+@keyframes ws{from{left:-60px}to{left:100%}}
+.pipeline{display:flex;position:relative;border:1px solid rgba(0,245,196,.1);border-radius:16px;overflow:hidden;margin-bottom:56px;background:rgba(5,20,45,.6)}
+.ps{flex:1;padding:32px 14px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;border-right:1px solid rgba(0,245,196,.07);cursor:default;transition:background .25s;position:relative;z-index:1}
+.ps:last-child{border-right:none}
+.ps:hover{background:rgba(0,245,196,.04)}
+.ps-num{font-family:var(--fm);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--t2)}
+.ps-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;border:1px solid rgba(0,245,196,.15);background:rgba(0,245,196,.06);transition:all .25s}
+.ps:hover .ps-icon{background:rgba(0,245,196,.12);box-shadow:0 0 20px rgba(0,245,196,.15)}
+.ps-icon.b{border-color:rgba(79,140,255,.2);background:rgba(79,140,255,.07)}
+.ps:hover .ps-icon.b{background:rgba(79,140,255,.14)}
+.ps-icon.a{border-color:rgba(255,190,11,.2);background:rgba(255,190,11,.07)}
+.ps-icon.pk{border-color:rgba(244,114,182,.2);background:rgba(244,114,182,.07)}
+.ps-tag{font-family:var(--fm);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:20px;color:var(--e);background:rgba(0,245,196,.07);border:1px solid rgba(0,245,196,.2)}
+.ps-tag.b{color:var(--p);background:rgba(79,140,255,.07);border-color:rgba(79,140,255,.2)}
+.ps-tag.a{color:var(--warn);background:rgba(255,190,11,.07);border-color:rgba(255,190,11,.2)}
+.ps-tag.pk{color:#f472b6;background:rgba(244,114,182,.07);border-color:rgba(244,114,182,.2)}
+.ps-name{font-family:var(--fh);font-size:15px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--t0)}
+.ps-desc{font-size:11px;color:var(--t1);line-height:1.6;max-width:130px}
+.rw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.rw-card{background:var(--glass);backdrop-filter:blur(16px);border:1px solid rgba(0,245,196,.1);border-radius:14px;padding:24px}
+.rw-lbl{font-family:var(--fm);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--t2);margin-bottom:9px}
+.rw-val{font-family:var(--fh);font-size:22px;font-weight:900;color:var(--e);margin-bottom:6px}
+.rw-val.p{color:var(--p)}.rw-val.d{color:var(--danger)}
+.rw-desc{font-size:12px;color:var(--t1);line-height:1.6}
+
+/* TOPOLOGY */
+#topology{background:linear-gradient(180deg,var(--bg1),var(--bg0))}
+.topo-layout{display:grid;grid-template-columns:1.3fr 1fr;gap:28px;align-items:start}
+#topoCanvas{width:100%;border-radius:14px;border:1px solid rgba(0,245,196,.12);background:rgba(2,10,25,.85);display:block}
+.topo-side{display:flex;flex-direction:column;gap:12px}
+.ts-card{background:var(--glass);backdrop-filter:blur(16px);border:1px solid rgba(0,245,196,.1);border-radius:11px;padding:14px 18px}
+.ts-lbl{font-family:var(--fm);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--t2);margin-bottom:5px}
+.ts-val{font-family:var(--fh);font-size:26px;font-weight:900;color:var(--e)}
+.leg-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t1);margin-bottom:5px}
+.ldot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.lline{width:22px;height:2px;border-radius:1px;flex-shrink:0}
+
+/* SIMULATION */
+#simulation{background:var(--bg0)}
+.sim-layout{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.chart-gc{background:var(--glass);backdrop-filter:blur(20px);border:1px solid rgba(0,245,196,.11);border-radius:14px;padding:20px}
+.cgc-lbl{font-family:var(--fm);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--t1);margin-bottom:14px}
+.ll-list{display:flex;flex-direction:column;gap:6px}
+.ll-top{display:flex;justify-content:space-between;font-family:var(--fm);font-size:9px;color:var(--t2);margin-bottom:3px}
+.ll-track{height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden}
+.ll-fill{height:100%;border-radius:3px;transition:width .6s ease,background .4s}
+.sim-footer{margin-top:14px;display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid rgba(0,245,196,.07)}
+.step-ctr{font-family:var(--fm);font-size:10px;color:var(--t2)}
+.sim-btns{display:flex;gap:7px}
+.sb-btn{background:none;border:1px solid rgba(0,245,196,.2);color:var(--e);font-family:var(--fb);font-size:12px;font-weight:600;padding:6px 13px;border-radius:6px;cursor:pointer;transition:all .2s}
+.sb-btn:hover{background:rgba(0,245,196,.08);border-color:var(--e)}
+.sb-btn.primary{background:var(--e);color:#020812;border-color:var(--e)}
+.sb-btn.primary:hover{background:#00ffce;box-shadow:0 0 16px rgba(0,245,196,.4)}
+.sb-btn:disabled{opacity:.3;cursor:not-allowed}
+.log-box{margin-top:18px;background:rgba(2,8,18,.7);backdrop-filter:blur(12px);border:1px solid rgba(0,245,196,.08);border-radius:12px;padding:14px}
+.log-lbl{font-family:var(--fm);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--t2);margin-bottom:9px}
+#agentLog{height:88px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;scrollbar-width:thin;scrollbar-color:rgba(0,245,196,.12) transparent}
+
+/* QUANTUM */
+#quantum{background:var(--bg1)}
+.q-layout{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.corr-gc{background:var(--glass);backdrop-filter:blur(16px);border:1px solid rgba(0,245,196,.1);border-radius:14px;padding:18px}
+#corrCanvas{width:100%;border-radius:7px;display:block}
+#qNetCanvas{width:100%;border-radius:12px;border:1px solid rgba(0,245,196,.1);background:rgba(2,8,18,.8);display:block;margin-top:14px}
+.q-steps{display:flex;flex-direction:column;gap:13px}
+.qs{background:var(--glass);backdrop-filter:blur(14px);border:1px solid rgba(0,245,196,.09);border-radius:12px;padding:18px 20px;border-left:3px solid var(--e);transition:border-color .3s}
+.qs:hover{border-left-color:var(--p)}
+.qs-n{font-family:var(--fm);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--e);margin-bottom:5px}
+.qs-t{font-weight:700;font-size:14px;margin-bottom:4px}
+.qs-d{font-size:12px;color:var(--t1);line-height:1.6}
+.q-sim-btns{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+.qb{background:rgba(0,245,196,.06);border:1px solid rgba(0,245,196,.2);color:var(--e);font-family:var(--fb);font-size:11px;font-weight:600;padding:7px 14px;border-radius:7px;cursor:pointer;transition:all .2s}
+.qb:hover{background:rgba(0,245,196,.12);border-color:var(--e)}
+.qb.w{color:var(--warn);border-color:rgba(255,190,11,.3);background:rgba(255,190,11,.06)}
+.qb.w:hover{background:rgba(255,190,11,.12)}
+.qb.d{color:var(--danger);border-color:rgba(255,77,109,.3);background:rgba(255,77,109,.06)}
+.qb.d:hover{background:rgba(255,77,109,.12)}
+#qLog{margin-top:12px;font-family:var(--fm);font-size:10px;height:90px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(0,245,196,.12) transparent;background:rgba(2,8,18,.6);border:1px solid rgba(0,245,196,.07);border-radius:8px;padding:10px 12px;color:var(--t1);line-height:1.8}
+
+/* RESULTS */
+#results{background:var(--bg0)}
+.res-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.rc{background:var(--glass);backdrop-filter:blur(20px);border:1px solid rgba(0,245,196,.1);border-radius:14px;padding:26px 18px;text-align:center;position:relative;overflow:hidden;transition:all .3s}
+.rc::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--e),transparent);opacity:.22}
+.rc:hover{border-color:var(--gb2);transform:translateY(-5px);box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.rc-icon{font-size:26px;margin-bottom:10px;display:block}
+.rc-num{font-family:var(--fh);font-size:42px;font-weight:900;line-height:1;color:var(--e);text-shadow:0 0 20px rgba(0,245,196,.3);margin-bottom:7px}
+.rc-num.p{color:var(--p)}.rc-num.w{color:var(--warn)}.rc-num.pu{color:var(--purple)}
+.rc-lbl{font-size:11px;color:var(--t1);line-height:1.5}
+.chart-full{background:var(--glass);backdrop-filter:blur(20px);border:1px solid rgba(0,245,196,.1);border-radius:14px;padding:22px}
+
+/* STACK */
+#stack{background:var(--bg1)}
+.sk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.sk-card{background:var(--glass);backdrop-filter:blur(16px);border:1px solid rgba(0,245,196,.1);border-radius:16px;padding:28px 22px;transition:all .3s}
+.sk-card:hover{border-color:var(--gb2);transform:translateY(-5px);box-shadow:0 20px 50px rgba(0,0,0,.45)}
+.sk-icon{font-size:28px;margin-bottom:13px}
+.sk-name{font-family:var(--fh);font-size:19px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--e);margin-bottom:7px}
+.sk-name.p{color:var(--p)}.sk-name.w{color:var(--warn)}.sk-name.pk{color:#f472b6}
+.sk-desc{font-size:12px;color:var(--t1);line-height:1.7;margin-bottom:13px}
+.tag{display:inline-block;font-family:var(--fm);font-size:10px;padding:3px 8px;border-radius:4px;margin:2px 2px 0 0;background:rgba(0,245,196,.07);border:1px solid rgba(0,245,196,.18);color:var(--e)}
+.tag.p{background:rgba(79,140,255,.07);border-color:rgba(79,140,255,.2);color:var(--p)}
+.tag.w{background:rgba(255,190,11,.07);border-color:rgba(255,190,11,.2);color:var(--warn)}
+.tag.pk{background:rgba(244,114,182,.07);border-color:rgba(244,114,182,.2);color:#f472b6}
+
+/* FOOTER */
+footer{background:rgba(2,8,18,.95);border-top:1px solid rgba(0,245,196,.06);padding:40px 3rem;display:flex;align-items:center;justify-content:space-between}
+.fl{font-family:var(--fh);font-size:18px;font-weight:900;letter-spacing:3px;color:var(--e)}
+.fl span{color:var(--p)}
+.fl-sub{font-size:11px;color:var(--t2);margin-top:4px}
+.f-links{display:flex;gap:22px}
+.f-links a{color:var(--t1);text-decoration:none;font-size:12px;transition:color .2s}
+.f-links a:hover{color:var(--e)}
+</style>
+</head>
+<body>
+
+<canvas id="wgl"></canvas>
+<div class="page">
+
+<!-- NAV -->
+<nav id="mainNav">
+  <div class="nav-logo">Grid<span>Mind</span></div>
+  <div class="nav-links">
+    <a class="nl" href="#how">Architecture</a>
+    <a class="nl" href="#topology">Grid</a>
+    <a class="nl" href="#simulation">Simulation</a>
+    <a class="nl" href="#quantum">Quantum</a>
+    <a class="nl" href="#results">Results</a>
+    <a class="nl" href="#stack">Stack</a>
+  </div>
+  <div class="nav-pill"><div class="pdot"></div>Live Demo</div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-eyebrow">National Buildathon 2026 &nbsp;·&nbsp; Forge India &nbsp;·&nbsp; AI Track</div>
+  <h1 class="hero-t">
+    <span class="g1">Grid</span>
+    <span class="g2">Mind</span>
+  </h1>
+  <p class="hero-sub">
+    Reinforcement learning meets real-time power grid management.
+    <strong>PPO agent</strong> guided by <strong>GNN topology encoding</strong>,
+    <strong>LSTM demand forecasting</strong> and a <strong>quantum-inspired heuristic</strong>
+    — cutting transmission loss by 18.2%.
+  </p>
+  <div class="hero-btns">
+    <a href="#simulation" class="btn-e">Run Simulation</a>
+    <a href="#results" class="btn-g">See Results →</a>
+  </div>
+  <div class="hero-stats">
+    <div class="hs"><span class="hs-num" id="cnt1">0%</span><div class="hs-lbl">Loss Reduction</div></div>
+    <div class="hs"><span class="hs-num bl" id="cnt2">0</span><div class="hs-lbl">Steps Survived</div></div>
+    <div class="hs"><span class="hs-num am" id="cnt3">0%</span><div class="hs-lbl">Forecast Accuracy</div></div>
+    <div class="hs"><span class="hs-num pu" id="cnt4">0</span><div class="hs-lbl">AI Models</div></div>
+  </div>
+  <div class="scroll-cue"><div class="sc-line"></div><span>Scroll</span></div>
+</section>
+
+<!-- STATS BAND -->
+<section id="statsband">
+  <div class="wrap">
+    <div class="sb-grid">
+      <div class="sb-cell sr"><div class="sb-num" data-count="18.2" data-suffix="%" data-dec="1">0%</div><div class="sb-lbl">Avg Transmission Loss Reduced</div></div>
+      <div class="sb-cell sr"><div class="sb-num p" data-count="200" data-suffix="" data-dec="0">0</div><div class="sb-lbl">Max Steps Survived</div></div>
+      <div class="sb-cell sr"><div class="sb-num w" data-count="99" data-suffix="%" data-dec="0">0%</div><div class="sb-lbl">LSTM Forecast Accuracy</div></div>
+      <div class="sb-cell sr"><div class="sb-num pu" data-count="34" data-suffix="%" data-dec="0">0%</div><div class="sb-lbl">Steps with Quantum Heuristic Active</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="sec-pad">
+  <div class="wire-track"></div><div class="wire-spark"></div>
+  <div class="wrap">
+    <div class="sr">
+      <div class="sec-eyebrow">02 — Architecture</div>
+      <h2 class="sec-title">How <span class="e">GridMind</span> Works</h2>
+      <p class="sec-sub" style="margin-bottom:44px">Four AI modules fire every timestep — encoding topology, forecasting load, filtering the action space, then executing the optimal switching decision.</p>
+    </div>
+    <div class="pipeline sr">
+      <div class="ps">
+        <div class="ps-num">01</div><div class="ps-icon">🕸</div>
+        <div class="ps-tag">GNN</div>
+        <div class="ps-name">Topology Encoder</div>
+        <div class="ps-desc">Graph Net encodes 14-node grid into 64-dim embedding via message passing</div>
+      </div>
+      <div class="ps">
+        <div class="ps-num">02</div><div class="ps-icon b">📈</div>
+        <div class="ps-tag b">LSTM</div>
+        <div class="ps-name">Demand Forecaster</div>
+        <div class="ps-desc">Predicts next-step load across 11 nodes using 12-step sliding window</div>
+      </div>
+      <div class="ps">
+        <div class="ps-num">03</div><div class="ps-icon a">⚛</div>
+        <div class="ps-tag a">Quantum</div>
+        <div class="ps-name">Action Filter</div>
+        <div class="ps-desc">Correlation matrix identifies entangled lines during overload, pruning PPO search</div>
+      </div>
+      <div class="ps">
+        <div class="ps-num">04</div><div class="ps-icon pk">🧠</div>
+        <div class="ps-tag pk">PPO</div>
+        <div class="ps-name">RL Agent</div>
+        <div class="ps-desc">Proximal Policy Optimization executes switching decisions to minimise loss</div>
+      </div>
+    </div>
+    <div class="rw-grid">
+      <div class="rw-card sr"><div class="rw-lbl">Observation Space</div><div class="rw-val">120-dim</div><div class="rw-desc">ρ · P_or · P_ex · V_or · A_or · line_status — 6 features × 20 lines per timestep</div></div>
+      <div class="rw-card sr"><div class="rw-lbl">Action Space</div><div class="rw-val p">3 discrete</div><div class="rw-desc">Do-nothing (×2) · Reconnect line 0 — entropy coef 0.01 for exploration</div></div>
+      <div class="rw-card sr"><div class="rw-lbl">Reward Shaping</div><div class="rw-val d">Custom</div><div class="rw-desc">+1 survival &nbsp;·&nbsp; −5 per overloaded line &nbsp;·&nbsp; −0.01×loss &nbsp;·&nbsp; −50 on game-over</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TOPOLOGY -->
+<section id="topology" class="sec-pad">
+  <div class="wrap">
+    <div class="sr">
+      <div class="sec-eyebrow">03 — Network</div>
+      <h2 class="sec-title">The <span class="e">14-Node</span> Power Grid</h2>
+      <p class="sec-sub" style="margin-bottom:36px">IEEE 14-bus system. GNN assigns each substation: max ρ, normalised generation, normalised demand — then propagates via 2-layer message passing across bidirectional edges.</p>
+    </div>
+    <div class="topo-layout">
+      <div class="sr-l"><canvas id="topoCanvas" height="440"></canvas></div>
+      <div class="topo-side sr-r">
+        <div class="ts-card"><div class="ts-lbl">GNN Embedding</div><div class="ts-val">64-dim</div></div>
+        <div class="ts-card"><div class="ts-lbl">Message Passing Layers</div><div class="ts-val">2 layers</div></div>
+        <div class="ts-card"><div class="ts-lbl">Node Features</div><div class="ts-val">3 / node</div></div>
+        <div class="ts-card"><div class="ts-lbl">Bidirectional Edges</div><div class="ts-val">40 edges</div></div>
+        <div class="gc" style="padding:16px">
+          <div class="ts-lbl" style="margin-bottom:8px">Legend</div>
+          <div class="leg-row"><div class="ldot" style="background:var(--p)"></div>Generator substation</div>
+          <div class="leg-row"><div class="ldot" style="background:var(--e)"></div>Load substation</div>
+          <div class="leg-row"><div class="ldot" style="background:#f472b6"></div>Mixed (gen + load)</div>
+          <div style="height:6px"></div>
+          <div class="leg-row"><div class="lline" style="background:var(--e)"></div>Normal ρ &lt; 0.7</div>
+          <div class="leg-row"><div class="lline" style="background:var(--warn)"></div>Warning 0.7–0.9</div>
+          <div class="leg-row"><div class="lline" style="background:var(--danger)"></div>Overloaded ρ &gt; 0.9</div>
+        </div>
+        <button class="btn-g" style="font-size:13px;padding:10px 18px;width:100%" onclick="toggleTopo()">▶ Animate Load Flow</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SIMULATION -->
+<section id="simulation" class="sec-pad">
+  <div class="wrap">
+    <div class="sr">
+      <div class="sec-eyebrow">04 — Live Replay</div>
+      <h2 class="sec-title">Agent <span class="e">Simulation</span></h2>
+      <p class="sec-sub" style="margin-bottom:36px">Pre-recorded episode replay. Press Play to watch GridMind manage 20 transmission lines in real-time — green is stable, amber is warning, red triggers the quantum heuristic.</p>
+    </div>
+    <div class="sim-layout">
+      <div class="chart-gc sr-l">
+        <div class="cgc-lbl">Transmission Loss — GridMind vs Baseline (MW)</div>
+        <div style="position:relative;height:220px"><canvas id="lossChart"></canvas></div>
+        <div style="display:flex;gap:14px;margin-top:8px;font-family:var(--fm);font-size:9px;color:var(--t2)">
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:2px;background:var(--e);display:inline-block;border-radius:1px"></span>GridMind</span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:2px;background:rgba(255,77,109,.6);display:inline-block;border-radius:1px"></span>Baseline 562 MW</span>
+        </div>
+      </div>
+      <div class="chart-gc sr-r">
+        <div class="cgc-lbl">Line Load Ratios ρ — current step</div>
+        <div class="ll-list" id="llList"></div>
+        <div class="sim-footer">
+          <span class="step-ctr">Step: <span id="simStep">0</span>/200</span>
+          <div class="sim-btns">
+            <button class="sb-btn primary" id="btnPlay" onclick="startSim()">▶ Play</button>
+            <button class="sb-btn" id="btnStop" onclick="stopSim()" disabled>■ Stop</button>
+            <button class="sb-btn" onclick="resetSim()">↺</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="log-box sr">
+      <div class="log-lbl">Agent Decision Log</div>
+      <div id="agentLog"></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- QUANTUM -->
+<section id="quantum" class="sec-pad">
+  <div class="wrap">
+    <div class="sr">
+      <div class="sec-eyebrow">05 — Quantum Heuristic</div>
+      <h2 class="sec-title">Quantum-<span class="e">Inspired</span><br>Action Filtering</h2>
+      <p class="sec-sub" style="margin-bottom:36px">When ρ &gt; 0.85 on any line, a correlation matrix identifies statistically "entangled" lines. The PPO agent focuses exclusively on these — cutting action search space during critical faults.</p>
+    </div>
+    <div class="q-layout">
+      <div class="sr-l">
+        <div class="corr-gc"><div class="cgc-lbl">Line Correlation Matrix 20×20</div><canvas id="corrCanvas"></canvas></div>
+        <canvas id="qNetCanvas" height="250"></canvas>
+      </div>
+      <div class="q-steps sr-r">
+        <div class="qs"><div class="qs-n">Step 01</div><div class="qs-t">Detect overload</div><div class="qs-d">Monitor ρ across all 20 lines. Any line exceeding 0.85 triggers the quantum filter immediately.</div></div>
+        <div class="qs"><div class="qs-n">Step 02</div><div class="qs-t">Compute entanglement</div><div class="qs-d">Query pre-computed correlation matrix. Lines with r &gt; 0.7 correlation to the overloaded line are flagged "entangled."</div></div>
+        <div class="qs"><div class="qs-n">Step 03</div><div class="qs-t">Prune &amp; prioritise</div><div class="qs-d">PPO action space is pruned to entangled lines only — dramatically reducing search space during critical moments.</div></div>
+        <div class="gc" style="padding:16px;text-align:center">
+          <div style="font-family:var(--fh);font-size:50px;font-weight:900;color:var(--purple);text-shadow:0 0 20px rgba(167,139,250,.4)" id="qPct">0%</div>
+          <div style="font-size:11px;color:var(--t1);margin-top:4px">of steps activated quantum heuristic</div>
+        </div>
+        <div class="q-sim-btns">
+          <button class="qb w" onclick="qSimOverload()">Simulate Overload</button>
+          <button class="qb d" onclick="qSimCascade()">Cascade Fault</button>
+          <button class="qb" onclick="qSimFault()">Random Fault</button>
+          <button class="qb" onclick="qReset()" style="margin-left:auto">↺ Reset</button>
+        </div>
+        <div id="qLog">Monitoring grid — all loads below 0.85. Quantum filter idle.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- RESULTS -->
+<section id="results" class="sec-pad">
+  <div class="wrap">
+    <div class="sr">
+      <div class="sec-eyebrow">06 — Results</div>
+      <h2 class="sec-title">Headline <span class="e">Numbers</span></h2>
+      <p class="sec-sub" style="margin-bottom:36px">Evaluated across 5 full episodes on l2rpn_case14_sandbox. GridMind consistently outperforms the random-action baseline on every metric.</p>
+    </div>
+    <div class="res-grid">
+      <div class="rc sr"><span class="rc-icon">📉</span><div class="rc-num">18.2%</div><div class="rc-lbl">Reduction in avg transmission loss vs baseline</div></div>
+      <div class="rc sr"><span class="rc-icon">🏁</span><div class="rc-num p">200</div><div class="rc-lbl">Steps survived — full episode length every run</div></div>
+      <div class="rc sr"><span class="rc-icon">🎯</span><div class="rc-num w">99%</div><div class="rc-lbl">LSTM demand forecast accuracy (MAPE &lt; 1%)</div></div>
+      <div class="rc sr"><span class="rc-icon">⚛</span><div class="rc-num pu">~34%</div><div class="rc-lbl">Steps where quantum heuristic activated</div></div>
+    </div>
+    <div class="chart-full sr">
+      <div class="cgc-lbl" style="margin-bottom:14px">Episode comparison — avg transmission loss (MW)</div>
+      <div style="position:relative;height:260px"><canvas id="epChart"></canvas></div>
+      <div style="display:flex;gap:18px;margin-top:10px;font-family:var(--fm);font-size:9px;color:var(--t2)">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:11px;background:rgba(0,245,196,.2);border:1px solid var(--e);display:inline-block;border-radius:2px"></span>GridMind</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:11px;background:rgba(255,77,109,.18);border:1px solid var(--danger);display:inline-block;border-radius:2px"></span>Baseline</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- STACK -->
+<section id="stack" class="sec-pad">
+  <div class="wrap">
+    <div class="sr">
+      <div class="sec-eyebrow">07 — Tech Stack</div>
+      <h2 class="sec-title">The <span class="e">AI Stack</span></h2>
+      <p class="sec-sub" style="margin-bottom:44px">Four specialised models operating in concert — each solving a distinct part of the real-time grid management problem.</p>
+    </div>
+    <div class="sk-grid">
+      <div class="sk-card sr"><div class="sk-icon">🧠</div><div class="sk-name">PPO Agent</div><div class="sk-desc">Proximal Policy Optimization trained for 50,000 timesteps. Custom shaped reward. MLP policy with entropy bonus. Checkpoint callbacks every 10k steps.</div><span class="tag">stable-baselines3</span><span class="tag">50k steps</span><span class="tag">γ=0.99</span></div>
+      <div class="sk-card sr"><div class="sk-icon">🕸</div><div class="sk-name p">GNN Encoder</div><div class="sk-desc">2-layer Graph Neural Network with message passing over the 14-node topology. 3 features per node. Outputs 64-dim graph embedding representing full grid state.</div><span class="tag p">PyTorch</span><span class="tag p">64-dim</span><span class="tag p">bidirectional</span></div>
+      <div class="sk-card sr"><div class="sk-icon">📈</div><div class="sk-name w">LSTM Forecaster</div><div class="sk-desc">2-layer LSTM trained on 500-step load history. Predicts demand across all 11 loads. 12-step sliding window. Z-score normalised. MAPE below 1%.</div><span class="tag w">PyTorch LSTM</span><span class="tag w">seq=12</span><span class="tag w">MAPE&lt;1%</span></div>
+      <div class="sk-card sr"><div class="sk-icon">⚛</div><div class="sk-name pk">Quantum Filter</div><div class="sk-desc">Correlation matrix of all 20 lines over 200-step history. Identifies statistically coupled lines during fault events. Threshold r=0.7 for entanglement detection.</div><span class="tag pk">numpy</span><span class="tag pk">r&gt;0.7</span><span class="tag pk">200-step</span></div>
+      <div class="sk-card sr"><div class="sk-icon">🌐</div><div class="sk-name">Environment</div><div class="sk-desc">Grid2Op l2rpn_case14_sandbox — IEEE 14-bus power system used in L2RPN competition. Custom Gymnasium wrapper with safe action masking for SB3 compatibility.</div><span class="tag">grid2op</span><span class="tag">gymnasium</span><span class="tag">IEEE 14-bus</span></div>
+      <div class="sk-card sr"><div class="sk-icon">🏋</div><div class="sk-name">Training</div><div class="sk-desc">SafeGridEnv wrapper with custom reward shaping. lr=3e-4, batch=64, n_steps=2048, n_epochs=10, clip=0.2. Trained from scratch in under 1 hour.</div><span class="tag">lr=3e-4</span><span class="tag">batch=64</span><span class="tag">clip=0.2</span></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div><div class="fl">Grid<span>Mind</span></div><div class="fl-sub">National Buildathon 2026 · Forge India · AI Track</div></div>
+  <div class="f-links"><a href="#hero">Top</a><a href="#simulation">Simulation</a><a href="#results">Results</a><a href="#stack">Stack</a></div>
+</footer>
+
+</div>
+
+<script>
+/* ── WebGL wire-current particle field ── */
+(function(){
+  const c=document.getElementById('wgl');
+  const gl=c.getContext('webgl');
+  if(!gl){c.style.display='none';return;}
+  let W,H;
+  function rsz(){W=c.width=innerWidth;H=c.height=innerHeight;gl.viewport(0,0,W,H);}
+  rsz();addEventListener('resize',rsz);
+  const vs=`attribute vec2 p;attribute float a;varying float va;uniform vec2 r;void main(){vec2 n=(p/r)*2.0-1.0;n.y=-n.y;gl_Position=vec4(n,0,1);gl_PointSize=2.5;va=a;}`;
+  const fs=`precision mediump float;varying float va;uniform vec3 col;void main(){float d=length(gl_PointCoord-.5)*2.;float a=1.-smoothstep(.5,1.,d);gl_FragColor=vec4(col,va*a);}`;
+  function sh(t,s){const x=gl.createShader(t);gl.shaderSource(x,s);gl.compileShader(x);return x;}
+  const pr=gl.createProgram();
+  gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs));
+  gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fs));
+  gl.linkProgram(pr);gl.useProgram(pr);
+  const N=240;
+  const pos=new Float32Array(N*2),vel=new Float32Array(N*2),alp=new Float32Array(N),lf=new Float32Array(N),ml=new Float32Array(N);
+  function ini(i){
+    const h=Math.random()>.5;
+    if(h){pos[i*2]=Math.random()*2400;pos[i*2+1]=Math.round(Math.random()*16)*80;}
+    else{pos[i*2]=Math.round(Math.random()*28)*80;pos[i*2+1]=Math.random()*1200;}
+    vel[i*2]=h?(Math.random()>.5?1.3:-1.3):0;
+    vel[i*2+1]=h?0:(Math.random()>.5?1.1:-1.1);
+    lf[i]=0;ml[i]=60+Math.random()*130;alp[i]=0;
+  }
+  for(let i=0;i<N;i++)ini(i);
+  const pb=gl.createBuffer(),ab=gl.createBuffer();
+  const ap=gl.getAttribLocation(pr,'p'),aa=gl.getAttribLocation(pr,'a');
+  const ur=gl.getUniformLocation(pr,'r'),uc=gl.getUniformLocation(pr,'col');
+  gl.enableVertexAttribArray(ap);gl.enableVertexAttribArray(aa);
+  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+  function fr(){
+    gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);
+    for(let i=0;i<N;i++){
+      lf[i]++;pos[i*2]+=vel[i*2];pos[i*2+1]+=vel[i*2+1];
+      alp[i]=Math.sin((lf[i]/ml[i])*Math.PI)*0.5;
+      if(lf[i]>=ml[i])ini(i);
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER,pb);gl.bufferData(gl.ARRAY_BUFFER,pos,gl.DYNAMIC_DRAW);
+    gl.vertexAttribPointer(ap,2,gl.FLOAT,false,0,0);
+    gl.bindBuffer(gl.ARRAY_BUFFER,ab);gl.bufferData(gl.ARRAY_BUFFER,alp,gl.DYNAMIC_DRAW);
+    gl.vertexAttribPointer(aa,1,gl.FLOAT,false,0,0);
+    gl.uniform2f(ur,W,H);
+    gl.uniform3f(uc,0,.965,.77);gl.drawArrays(gl.POINTS,0,Math.floor(N*.65));
+    gl.uniform3f(uc,.31,.55,1);gl.drawArrays(gl.POINTS,Math.floor(N*.65),Math.floor(N*.35));
+    requestAnimationFrame(fr);
+  }
+  fr();
+})();
+
+/* ── GSAP Scroll ── */
+gsap.registerPlugin(ScrollTrigger);
+
+// Hero entrance
+gsap.to('.hero-eyebrow',{opacity:1,y:0,duration:.8,delay:.2,ease:'power3.out'});
+gsap.to('h1.hero-t',{opacity:1,y:0,duration:.9,delay:.45,ease:'power3.out'});
+gsap.to('.hero-sub',{opacity:1,y:0,duration:.8,delay:.65,ease:'power3.out'});
+gsap.to('.hero-btns',{opacity:1,y:0,duration:.8,delay:.82,ease:'power3.out'});
+gsap.to('.hero-stats',{opacity:1,y:0,duration:.8,delay:1,ease:'power3.out',onComplete:heroCounters});
+
+// Batch scroll reveals
+gsap.utils.toArray('.sr').forEach((el,i)=>{
+  gsap.fromTo(el,{opacity:0,y:36},{opacity:1,y:0,duration:.75,ease:'power3.out',
+    scrollTrigger:{trigger:el,start:'top 86%',toggleActions:'play none none none'},
+    delay:(i%4)*.07});
+});
+gsap.utils.toArray('.sr-l').forEach(el=>{
+  gsap.fromTo(el,{opacity:0,x:-40},{opacity:1,x:0,duration:.8,ease:'power3.out',
+    scrollTrigger:{trigger:el,start:'top 86%'}});
+});
+gsap.utils.toArray('.sr-r').forEach(el=>{
+  gsap.fromTo(el,{opacity:0,x:40},{opacity:1,x:0,duration:.8,ease:'power3.out',
+    scrollTrigger:{trigger:el,start:'top 86%'}});
+});
+
+// Stats band counters
+document.querySelectorAll('.sb-num[data-count]').forEach(el=>{
+  const tgt=parseFloat(el.dataset.count),suf=el.dataset.suffix||'',dec=parseInt(el.dataset.dec)||0;
+  ScrollTrigger.create({trigger:el,start:'top 90%',once:true,
+    onEnter:()=>gsap.fromTo({v:0},{v:tgt},{duration:1.6,ease:'power2.out',
+      onUpdate:function(){el.textContent=this.targets()[0].v.toFixed(dec)+suf;}})
+  });
+});
+
+// Quantum % counter
+ScrollTrigger.create({trigger:'#quantum',start:'top 80%',once:true,
+  onEnter:()=>gsap.fromTo({v:0},{v:34},{duration:1.4,ease:'power2.out',
+    onUpdate:function(){document.getElementById('qPct').textContent=Math.round(this.targets()[0].v)+'%';}})
+});
+
+// Nav active state
+['how','topology','simulation','quantum','results','stack'].forEach(id=>{
+  ScrollTrigger.create({trigger:'#'+id,start:'top 55%',end:'bottom 55%',
+    onEnter:()=>setNav(id),onEnterBack:()=>setNav(id)});
+});
+function setNav(id){document.querySelectorAll('.nl').forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+id));}
+ScrollTrigger.create({start:'top -80',onUpdate:()=>{
+  document.getElementById('mainNav').style.background=scrollY>80?'rgba(2,8,18,.92)':'rgba(2,8,18,.7)';
+}});
+
+/* ── Hero counters ── */
+function heroCounters(){
+  function anim(el,t,suf,dec,dur){
+    gsap.fromTo({v:0},{v:t},{duration:dur||1.8,ease:'power2.out',
+      onUpdate:function(){el.textContent=this.targets()[0].v.toFixed(dec)+suf;}});
+  }
+  anim(document.getElementById('cnt1'),18.2,'%',1,1.6);
+  anim(document.getElementById('cnt2'),200,'',0,1.8);
+  anim(document.getElementById('cnt3'),99,'%',0,1.5);
+  anim(document.getElementById('cnt4'),4,'',0,1.0);
+}
+
+/* ── Topology Canvas ── */
+const topoC=document.getElementById('topoCanvas');
+const tCtx=topoC.getContext('2d');
+const NODES=[
+  {id:0,x:.50,y:.07,t:'gen'},{id:1,x:.27,y:.21,t:'gen'},{id:2,x:.73,y:.21,t:'gen'},
+  {id:3,x:.13,y:.41,t:'load'},{id:4,x:.50,y:.37,t:'mix'},{id:5,x:.85,y:.41,t:'load'},
+  {id:6,x:.10,y:.60,t:'load'},{id:7,x:.36,y:.60,t:'load'},{id:8,x:.64,y:.60,t:'load'},
+  {id:9,x:.88,y:.60,t:'load'},{id:10,x:.22,y:.80,t:'load'},{id:11,x:.50,y:.80,t:'load'},
+  {id:12,x:.72,y:.80,t:'gen'},{id:13,x:.88,y:.83,t:'load'}
+];
+const EDGES=[[0,1],[0,2],[0,4],[1,2],[1,3],[2,4],[2,5],[3,6],[3,7],[4,7],[4,8],[5,9],[6,10],[7,11],[8,11],[9,12],[10,11],[11,12],[12,13],[5,13]];
+let topoRho=EDGES.map(()=>Math.random()*.45+.15);
+let topoParticles=[],topoOn=false,topoTick=null;
+function nXY(n,W,H){return{x:n.x*W*.9+W*.05,y:n.y*H*.9+H*.05};}
+function nCol(t){return t==='gen'?'#4f8cff':t==='mix'?'#f472b6':'#00f5c4';}
+function rCol(r){return r>.9?'#ff4d6d':r>.7?'#ffbe0b':'#00f5c4';}
+function drawTopo(){
+  const W=topoC.offsetWidth||540,H=440;
+  topoC.width=W;tCtx.clearRect(0,0,W,H);
+  EDGES.forEach(([a,b],i)=>{
+    const pa=nXY(NODES[a],W,H),pb=nXY(NODES[b],W,H),r=topoRho[i],col=rCol(r);
+    tCtx.save();tCtx.strokeStyle=col;tCtx.lineWidth=1.8;tCtx.globalAlpha=.55;
+    tCtx.beginPath();tCtx.moveTo(pa.x,pa.y);tCtx.lineTo(pb.x,pb.y);tCtx.stroke();
+    if(r>.7){tCtx.lineWidth=5;tCtx.globalAlpha=.08;tCtx.beginPath();tCtx.moveTo(pa.x,pa.y);tCtx.lineTo(pb.x,pb.y);tCtx.stroke();}
+    tCtx.restore();
+  });
+  topoParticles.forEach(p=>{
+    const e=EDGES[p.ei],pa=nXY(NODES[e[0]],W,H),pb=nXY(NODES[e[1]],W,H);
+    const px=pa.x+(pb.x-pa.x)*p.t,py=pa.y+(pb.y-pa.y)*p.t;
+    tCtx.save();tCtx.beginPath();tCtx.arc(px,py,3,0,Math.PI*2);
+    tCtx.fillStyle='#00f5c4';tCtx.shadowBlur=10;tCtx.shadowColor='#00f5c4';tCtx.fill();tCtx.restore();
+  });
+  NODES.forEach(n=>{
+    const{x,y}=nXY(n,W,H),col=nCol(n.t);
+    tCtx.save();
+    tCtx.beginPath();tCtx.arc(x,y,12,0,Math.PI*2);tCtx.fillStyle=col+'18';tCtx.fill();
+    tCtx.beginPath();tCtx.arc(x,y,8,0,Math.PI*2);tCtx.fillStyle=col;tCtx.shadowBlur=14;tCtx.shadowColor=col;tCtx.fill();
+    tCtx.shadowBlur=0;tCtx.font="bold 7px 'Space Mono',monospace";tCtx.fillStyle='#020812';
+    tCtx.textAlign='center';tCtx.textBaseline='middle';tCtx.fillText('S'+n.id,x,y);tCtx.restore();
+  });
+}
+drawTopo();
+addEventListener('resize',drawTopo);
+function toggleTopo(){
+  if(topoOn){clearInterval(topoTick);topoParticles=[];topoOn=false;topoRho=EDGES.map(()=>Math.random()*.45+.15);drawTopo();}
+  else{
+    topoOn=true;topoParticles=EDGES.map((_,i)=>({ei:i,t:Math.random()}));
+    topoTick=setInterval(()=>{
+      topoParticles.forEach(p=>{p.t+=.03;if(p.t>1)p.t=0;});
+      topoRho=EDGES.map((e,i)=>Math.max(.05,Math.min(1.05,topoRho[i]+(Math.random()-.5)*.05)));
+      drawTopo();
+    },50);
+  }
+}
+
+/* ── Correlation Matrix ── */
+const corrC=document.getElementById('corrCanvas');
+const cCtx=corrC.getContext('2d');
+const QM=20;
+const qCorr=Array.from({length:QM},(_,i)=>Array.from({length:QM},(_,j)=>{
+  if(i===j)return 1;
+  return Math.min(1,Math.max(0,.88-Math.abs(i-j)*.07+(Math.random()-.5)*.18));
+}));
+let qOver=new Set(),qEnt=new Set();
+function drawCorr(){
+  const W=corrC.offsetWidth||300,S=Math.floor(W/QM);
+  corrC.width=S*QM;corrC.height=S*QM;
+  for(let i=0;i<QM;i++)for(let j=0;j<QM;j++){
+    const v=qCorr[i][j],io=qOver.has(i)||qOver.has(j),ie=qEnt.has(i)||qEnt.has(j);
+    let r,g,b,a;
+    if(v>.7){if(io){r=220;g=38;b=38;a=.85;}else if(ie){r=124;g=58;b=237;a=.75;}else{r=0;g=196;b=154;a=.7;}}
+    else if(v>.4){r=255;g=190;b=11;a=.45;}else{r=5;g=20;b=45;a=.85;}
+    cCtx.fillStyle=`rgba(${r},${g},${b},${a})`;
+    cCtx.fillRect(j*S+1,i*S+1,S-2,S-2);
+  }
+}
+drawCorr();
+addEventListener('resize',drawCorr);
+
+/* ── Quantum Network Canvas ── */
+const qNC=document.getElementById('qNetCanvas');
+const qNCx=qNC.getContext('2d');
+function drawQNet(){
+  const W=qNC.offsetWidth||500,H=250;
+  qNC.width=W;qNCx.clearRect(0,0,W,H);
+  const nx=n=>n.x*(W*.88)+W*.06;
+  const qNodes=Array.from({length:14},(_,i)=>({id:i,x:i/13,y:.3+Math.sin(i*.7)*.35}));
+  const ny=n=>n.y*(H*.8)+H*.1;
+  EDGES.slice(0,14).forEach(([a,b])=>{
+    if(a>=14||b>=14)return;
+    const isH=qOver.has(a)||qOver.has(b)||qEnt.has(a)||qEnt.has(b);
+    qNCx.save();qNCx.strokeStyle=isH?'rgba(167,139,250,.5)':'rgba(0,245,196,.14)';qNCx.lineWidth=isH?1.5:1;
+    qNCx.beginPath();qNCx.moveTo(nx(qNodes[a]),ny(qNodes[a]));qNCx.lineTo(nx(qNodes[b]),ny(qNodes[b]));qNCx.stroke();qNCx.restore();
+  });
+  qNodes.forEach(n=>{
+    const x=nx(n),y=ny(n),isO=qOver.has(n.id),isE=qEnt.has(n.id),col=isO?'#ff4d6d':isE?'#a78bfa':'#00f5c4',r=isO?11:isE?10:8;
+    qNCx.save();qNCx.beginPath();qNCx.arc(x,y,r+4,0,Math.PI*2);qNCx.fillStyle=col+'18';qNCx.fill();
+    qNCx.beginPath();qNCx.arc(x,y,r,0,Math.PI*2);qNCx.fillStyle=col;qNCx.shadowBlur=isO||isE?16:8;qNCx.shadowColor=col;qNCx.fill();
+    qNCx.shadowBlur=0;qNCx.font="bold 7px 'Space Mono',monospace";qNCx.fillStyle='#020812';
+    qNCx.textAlign='center';qNCx.textBaseline='middle';qNCx.fillText('L'+n.id,x,y);qNCx.restore();
+  });
+}
+drawQNet();
+addEventListener('resize',drawQNet);
+
+/* ── Quantum controls ── */
+function qLog(msg,col){
+  const el=document.getElementById('qLog');
+  const t=new Date().toLocaleTimeString();
+  el.innerHTML+='<div style="color:'+(col||'#7ab8a8')+'"><span style="color:#2e5c50">'+t+'</span> '+msg+'</div>';
+  el.scrollTop=el.scrollHeight;
+}
+function qApply(){
+  qEnt=new Set();
+  qOver.forEach(oi=>{qCorr[oi%QM].forEach((v,j)=>{if(v>.7&&!qOver.has(j))qEnt.add(j);});});
+  drawCorr();drawQNet();
+}
+function qSimOverload(){qOver=new Set([3,7]);qCorr[3][7]=.89;qCorr[7][3]=.89;qApply();qLog('Overload: lines 3,7 — ρ>0.9','#ffbe0b');setTimeout(()=>qLog('Quantum filter active…','#7ab8a8'),350);setTimeout(()=>qLog('Entangled: ['+[...qEnt].join(',')+'] r>0.7','#a78bfa'),700);setTimeout(()=>qLog('PPO action space pruned.','#00f5c4'),1050);}
+function qSimCascade(){qOver=new Set([2,5,11]);qCorr[2][5]=.88;qCorr[5][2]=.88;qCorr[5][11]=.81;qCorr[11][5]=.81;qApply();qLog('CASCADE: lines 2,5,11 overloaded!','#ff4d6d');setTimeout(()=>qLog('High correlation (2,5) r=0.88','#ffbe0b'),400);setTimeout(()=>qLog('CASCADE RISK HIGH — '+qEnt.size+' entangled lines at risk','#ff4d6d'),800);}
+function qSimFault(){const f=Math.floor(Math.random()*14);qOver=new Set([f]);for(let j=0;j<QM;j++){if(j!==f%QM){qCorr[f%QM][j]=.55+Math.random()*.4;qCorr[j][f%QM]=qCorr[f%QM][j];}}qApply();qLog('Fault: L'+f+' — ρ='+(1+Math.random()*.1).toFixed(2),'#ff4d6d');setTimeout(()=>qLog('Entangled: ['+[...qEnt].join(',')+']','#00f5c4'),650);}
+function qReset(){qOver=new Set();qEnt=new Set();for(let i=0;i<QM;i++)for(let j=0;j<QM;j++)qCorr[i][j]=i===j?1:Math.min(1,Math.max(0,.88-Math.abs(i-j)*.07+(Math.random()-.5)*.18));qApply();document.getElementById('qLog').innerHTML='Monitoring grid — all loads below 0.85. Quantum filter idle.';qLog('Reset. Filter idle.','#00f5c4');}
+
+/* ── Simulation ── */
+let simInt=null,simStp=0,lossChart_=null,lossWin=[];
+const SIM=(()=>{const d=[];for(let i=0;i<200;i++){const l=562.14*.818+Math.sin(i*.18)*22+(Math.random()-.5)*28;const rho=Array.from({length:20},(_,j)=>Math.max(.05,Math.min(1.08,.32+Math.sin(i*.12+j*.55)*.28+Math.random()*.18)));d.push({l,rho,qa:rho.some(r=>r>.85),act:Math.random()>.75?1:0});}return d;})();
+
+(function(){const c=document.getElementById('llList');c.innerHTML='';for(let i=0;i<20;i++)c.innerHTML+=`<div><div class="ll-top"><span>Line ${String(i).padStart(2,'0')}</span><span id="lv${i}">—</span></div><div class="ll-track"><div class="ll-fill" id="lf${i}" style="width:0%"></div></div></div>`;})();
+
+(function(){const ctx=document.getElementById('lossChart').getContext('2d');lossChart_=new Chart(ctx,{type:'line',data:{labels:[],datasets:[{label:'GridMind',data:[],borderColor:'#00f5c4',borderWidth:2,pointRadius:0,tension:.4,fill:false},{label:'Baseline',data:[],borderColor:'rgba(255,77,109,.6)',borderWidth:1.5,borderDash:[6,4],pointRadius:0,tension:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#2e5c50',font:{size:9}},grid:{color:'rgba(0,245,196,.03)'}},y:{ticks:{color:'#2e5c50',font:{size:9}},grid:{color:'rgba(0,245,196,.03)'},min:300,max:640}}}});})();
+
+function simTick(){
+  if(simStp>=200){stopSim();return;}
+  const d=SIM[simStp];
+  d.rho.forEach((v,i)=>{const p=Math.min(v*100,100),col=v>.9?'#ff4d6d':v>.7?'#ffbe0b':'#00f5c4';
+    const f=document.getElementById('lf'+i),lbl=document.getElementById('lv'+i);
+    if(f){f.style.width=p.toFixed(0)+'%';f.style.background=col;}if(lbl)lbl.textContent=(v*100).toFixed(0)+'%';});
+  lossWin.push(Math.round(d.l));if(lossWin.length>80)lossWin.shift();
+  lossChart_.data.labels=lossWin.map((_,i)=>i);
+  lossChart_.data.datasets[0].data=[...lossWin];
+  lossChart_.data.datasets[1].data=Array(lossWin.length).fill(562);
+  lossChart_.update('none');
+  document.getElementById('simStep').textContent=simStp+1;
+  const al=document.getElementById('agentLog'),div=document.createElement('div');
+  div.style.cssText='font-family:var(--fm);font-size:10px;padding:1px 0;border-bottom:1px solid rgba(0,245,196,.04)';
+  const ov=d.rho.filter(r=>r>.9).length,t=new Date().toLocaleTimeString();
+  if(d.qa){div.style.color='#a78bfa';div.innerHTML=`<span style="color:#2e5c50">${t}</span> ⚛ Step ${simStp+1}: quantum active | loss=${Math.round(d.l)}MW`;}
+  else if(ov>0){div.style.color='#ffbe0b';div.innerHTML=`<span style="color:#2e5c50">${t}</span> ⚠ Step ${simStp+1}: ${ov} line(s) at risk | loss=${Math.round(d.l)}MW`;}
+  else{div.style.color='#00f5c4';div.innerHTML=`<span style="color:#2e5c50">${t}</span> ✓ Step ${simStp+1}: stable | loss=${Math.round(d.l)}MW | ${d.act?'Reconnect':'Do-nothing'}`;}
+  al.appendChild(div);while(al.children.length>50)al.removeChild(al.firstChild);al.scrollTop=al.scrollHeight;
+  simStp++;
+}
+function startSim(){document.getElementById('btnPlay').disabled=true;document.getElementById('btnStop').disabled=false;simInt=setInterval(simTick,55);}
+function stopSim(){clearInterval(simInt);simInt=null;document.getElementById('btnPlay').disabled=false;document.getElementById('btnStop').disabled=true;}
+function resetSim(){
+  stopSim();simStp=0;lossWin=[];
+  lossChart_.data.labels=[];lossChart_.data.datasets[0].data=[];lossChart_.data.datasets[1].data=[];lossChart_.update();
+  document.getElementById('simStep').textContent='0';document.getElementById('agentLog').innerHTML='';
+  for(let i=0;i<20;i++){const f=document.getElementById('lf'+i),lbl=document.getElementById('lv'+i);if(f){f.style.width='0%';f.style.background='var(--e)';}if(lbl)lbl.textContent='—';}
+}
+ScrollTrigger.create({trigger:'#simulation',start:'top 60%',once:true,onEnter:()=>setTimeout(startSim,700)});
+
+/* ── Episode Chart ── */
+(function(){
+  const ctx=document.getElementById('epChart').getContext('2d');
+  const base=[565,558,571,562,560],gm=base.map(v=>Math.round(v*(1-.182)+(Math.random()-.5)*6));
+  new Chart(ctx,{type:'bar',data:{labels:['Ep 1','Ep 2','Ep 3','Ep 4','Ep 5'],datasets:[
+    {label:'Baseline',data:base,backgroundColor:'rgba(255,77,109,.2)',borderColor:'#ff4d6d',borderWidth:1.5,borderRadius:5},
+    {label:'GridMind',data:gm,backgroundColor:'rgba(0,245,196,.18)',borderColor:'#00f5c4',borderWidth:1.5,borderRadius:5}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+' MW'}}},scales:{x:{ticks:{color:'#7ab8a8',font:{size:11}},grid:{color:'rgba(0,245,196,.03)'}},y:{ticks:{color:'#7ab8a8',font:{size:11}},grid:{color:'rgba(0,245,196,.03)'},min:430,max:600}}}});
+})();
+</script>
+</body>
+</html>

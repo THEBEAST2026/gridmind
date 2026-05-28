@@ -1,0 +1,85 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# ── Virtual environments ──
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# ── Jupyter ──
+.ipynb_checkpoints/
+*.ipynb
+
+# ── ML / Training artifacts ──
+checkpoints/
+runs/
+logs/
+wandb/
+mlruns/
+*.log
+
+# ── PyTorch (keep .pt files that are final trained models) ──
+# Uncomment below if you do NOT want to push model weights
+# *.pt
+# *.pth
+# *.ckpt
+
+# ── Data ──
+data/
+datasets/
+*.csv
+*.json
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.npy
+*.npz
+
+# ── OS ──
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+
+# ── IDE ──
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Grid2Op cache ──
+.grid2op/
+grid2op_data/
+
+# ── Stable Baselines3 ──
+# Keep gridmind_ppo_final.zip if you want judges to load it
+# Uncomment to exclude:
+# *.zip
+
+# ── Env files ──
+.env
+.env.local
+secrets.py
